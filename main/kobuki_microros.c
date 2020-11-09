@@ -31,26 +31,23 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 
 	kobuki_status_t robot_status = kobuki_get_status();
 
-	if (robot_status.odometry.init)
-	{
-		base_info.hw_id = robot_status.hw_id.UDID_0;
-		base_info.hw_timestamp = robot_status.last_basic_sensor_data.timestamp;
-		// base_info.stamp = 0;
-		base_info.x = robot_status.odometry.x;
-		base_info.y = robot_status.odometry.y;
-		base_info.orientation = robot_status.odometry.theta;
-		base_info.forward_velocity = robot_status.odometry.linear_velocity;
-		base_info.rotational_velocity = robot_status.odometry.angular_velocity;
-		base_info.battery_voltage_pct = 0;
-		base_info.power_supply = robot_status.last_basic_sensor_data.charger;
-		base_info.overcurrent = robot_status.last_basic_sensor_data.overcurrent;
-		base_info.blocked = robot_status.last_basic_sensor_data.bumper;
-		base_info.in_collision = robot_status.last_basic_sensor_data.bumper;
-		base_info.at_cliff = robot_status.last_basic_sensor_data.cliff;
-		base_info.safety_state = 0;
+	base_info.hw_id = robot_status.hw_id.UDID_0;
+	base_info.hw_timestamp = robot_status.last_basic_sensor_data.timestamp;
+	// base_info.stamp = 0;
+	base_info.x = robot_status.odometry.x;
+	base_info.y = robot_status.odometry.y;
+	base_info.orientation = robot_status.odometry.theta;
+	base_info.forward_velocity = robot_status.odometry.linear_velocity;
+	base_info.rotational_velocity = robot_status.odometry.angular_velocity;
+	base_info.battery_voltage_pct = 0;
+	base_info.power_supply = robot_status.last_basic_sensor_data.charger;
+	base_info.overcurrent = robot_status.last_basic_sensor_data.overcurrent;
+	base_info.blocked = robot_status.last_basic_sensor_data.bumper;
+	base_info.in_collision = robot_status.last_basic_sensor_data.bumper;
+	base_info.at_cliff = robot_status.last_basic_sensor_data.cliff;
+	base_info.safety_state = 0;
 
-		RCSOFTCHECK(rcl_publish(&base_info_pub, &base_info, NULL));
-	}
+	RCSOFTCHECK(rcl_publish(&base_info_pub, &base_info, NULL));
 }
 
 void cmd_vel_callback(const void * msgin)
@@ -85,7 +82,7 @@ void appMain(void * arg)
 	RCCHECK(rclc_node_init_default(&node, "micro_ros_esp32_kobuki", "", &support));
 
 	// create base info publisher
-	RCCHECK(rclc_publisher_init_default(
+	RCCHECK(rclc_publisher_init_best_effort(
 		&base_info_pub,
 		&node,
 		ROSIDL_GET_MSG_TYPE_SUPPORT(drive_base_msgs, msg, BaseInfo),
