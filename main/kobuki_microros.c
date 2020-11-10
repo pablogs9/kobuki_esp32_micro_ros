@@ -50,15 +50,25 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 	RCSOFTCHECK(rcl_publish(&base_info_pub, &base_info, NULL));
 }
 
+bool em_stop = false;
+
 void cmd_vel_callback(const void * msgin)
 {
 	geometry_msgs__msg__Twist * msg = (geometry_msgs__msg__Twist *) msgin;
-	kobuki_set_speed_command(msg->linear.x, msg->angular.z);
+	if (!em_stop){
+		kobuki_set_speed_command(msg->linear.x/3, msg->angular.z);
+	}
+	
 }
 
-void kobuki_emergency(kobuki_subpayload_t * msg){
-    kobuki_set_speed_command(0.0, 0.0);
-    printf("EMERGENCY STOP\n");
+void kobuki_emergency(kobuki_subpayload_t * msg, bool emergency){
+	if (emergency){
+		kobuki_set_speed_command(0.0, 0.0);
+    	printf("EMERGENCY STOP\n");
+		em_stop = true;
+	}else{
+		em_stop = false;
+	}
 }
 
 void appMain(void * arg)
@@ -89,7 +99,7 @@ void appMain(void * arg)
 		"base_info"));
 
 	// create cmd_vel subscriber
-	RCCHECK(rclc_subscription_init_default(
+	RCCHECK(rclc_subscription_init_best_effort(
 		&cmd_vel_sub,
 		&node,
 		ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
@@ -97,7 +107,7 @@ void appMain(void * arg)
 
 	// create timer,
 	rcl_timer_t timer = rcl_get_zero_initialized_timer();
-	const unsigned int timer_timeout = 20;
+	const unsigned int timer_timeout = 200;
 	RCCHECK(rclc_timer_init_default(&timer, &support, RCL_MS_TO_NS(timer_timeout), timer_callback));
 
 	// create executor
